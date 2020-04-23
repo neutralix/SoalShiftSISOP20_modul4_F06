@@ -59,8 +59,8 @@ static int xmp_getattr(const char *path, struct stat *stbuf) {
     int res;
     char fpath[1000];
     char s[1000];
-    // enkrip1(s, path);
-    sprintf(fpath,"%s%s",dirpath,path);
+    enkrip1(s, path);
+    sprintf(fpath, "%s/%s", dirpath, s);
     res = lstat(fpath, stbuf);
     if (res == -1)
         return -errno;
@@ -69,14 +69,14 @@ static int xmp_getattr(const char *path, struct stat *stbuf) {
 
 static int xmp_readdir(const char *path, void *buf, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info *fi) {
     char fpath[1000];
-    if(strcmp(fpath,"/") == 0) {
+    if(strcmp(path,"/") == 0) {
         path=dirpath;
         sprintf(fpath,"%s",path);
     }
     else {
-        // char s[1000];
-        // enkrip1(s, path);
-        sprintf(fpath, "%s%s", dirpath, path);
+        char s[1000];
+        enkrip1(s, path);
+        sprintf(fpath, "%s/%s", dirpath, s);
     }
     int res = 0;
     DIR *dp;
@@ -93,8 +93,8 @@ static int xmp_readdir(const char *path, void *buf, fuse_fill_dir_t filler, off_
         st.st_ino = de->d_ino;
         st.st_mode = de->d_type << 12;
         char s[1000];
-        // enkrip1(s, de->d_name);
-        res = (filler(buf, de->d_name, &st, 0));
+        enkrip1(s, de->d_name);
+        res = (filler(buf, s, &st, 0));
         if(res!=0) break;
     }
     closedir(dp);
@@ -103,14 +103,14 @@ static int xmp_readdir(const char *path, void *buf, fuse_fill_dir_t filler, off_
 
 static int xmp_read(const char *path, char *buf, size_t size, off_t offset, struct fuse_file_info *fi) {
     char fpath[1000];
-    if(strcmp(fpath,"/") == 0) {
+    if(strcmp(path,"/") == 0) {
         path=dirpath;
         sprintf(fpath,"%s",path);
     }
     else {
-        // char s[1000];
-        // enkrip1(s, path);
-        sprintf(fpath, "%s%s", dirpath, path);
+        char s[1000];
+        enkrip1(s, path);
+        sprintf(fpath, "%s/%s", dirpath, s);
     }
     int res = 0;
     int fd = 0 ;
