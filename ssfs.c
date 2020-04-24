@@ -8,8 +8,27 @@
 #include <errno.h>
 #include <sys/time.h>
 
-static const char *dirpath = "/home/martin/Documents";
+static const char *dirpath = "/home/tari/Documents";
 static const char *key = "9(ku@AW1[Lmvgax6q`5Y2Ry?+sF!^HKQiBXCUSe&0M.b%rI'7d)o4~VfZ*{#:}ETt$3J-zpc]lnh8,GwP_ND|jO";
+
+void get_log(char *print){
+    time_t t = time(NULL);
+    struct tm tm = *localtime(&t);
+    char waktu[200];
+
+    strftime(waktu, sizeof(waktu), "%y%m%d-%X", &tm);
+    
+    FILE *log;
+    log = fopen("/home/tari/fs.log", "a");
+
+    if(strstr(print, "RMDIR") != NULL || strstr(print, "UNLINK") != NULL){
+        fprintf(log, "WARNING::%s::%s", waktu, print);
+    }
+    else{
+        fprintf(log, "INFO::%s::%s", waktu, print);
+    }
+    fclose(log);
+}
 
 void dekrip1(char* res, char* name) {
     strcpy(res, "");
@@ -232,10 +251,146 @@ static int xmp_read(const char *path, char *buf, size_t size, off_t offset, stru
     return res;
 }
 
+static int xmp_mkdir(const char *path, mode_t mode)
+{
+    char fpath[1000];
+    if(strcmp(path,"/") == 0){
+        path=dirpath;
+        sprintf(fpath,"%s",path);
+    }
+    else sprintf(fpath, "%s%s",dirpath,path);
+
+	int res;
+	res = mkdir(fpath, mode);
+	if (res == -1)
+		return -errno;
+
+    char log[1000];
+    sprintf(log, "MKDIR::%s\n", path);
+    get_log(log);
+	return 0;
+}
+
+static int xmp_rmdir(const char *path)
+{
+    char fpath[1000];
+
+    if(strcmp(path,"/") == 0){
+        path=dirpath;
+        sprintf(fpath,"%s",path);
+    }
+    else sprintf(fpath, "%s%s",dirpath,path);
+
+	int res;
+
+	res = rmdir(fpath);
+	if (res == -1)
+		return -errno;
+
+    char log[1000];
+    sprintf(log, "RMDIR::%s\n", path);
+    get_log(log);
+	return 0;
+}
+
+static int xmp_rename(const char *from, const char *to)
+{
+	int res;
+    char fpath[1000], topath[1000];
+
+    sprintf(fpath, "%s%s", dirpath, from);
+    sprintf(topath, "%s%s", dirpath, to);
+
+	res = rename(fpath, topath);
+	if (res == -1)
+		return -errno;
+
+    char log[1000];
+    sprintf(log, "RENAME::%s::%s\n", from, to);
+    get_log(log);
+	return 0;
+}
+
+static int xmp_create(const char* path, mode_t mode, struct fuse_file_info* fi) {
+    char fpath[1000];
+
+    if(strcmp(path,"/") == 0){
+        path=dirpath;
+        sprintf(fpath,"%s",path);
+    }
+    else sprintf(fpath, "%s%s",dirpath,path);
+
+    (void) fi;
+
+    int res;
+    res = creat(fpath, mode);
+    if(res == -1)
+	    return -errno;
+
+    char log[1000];
+    sprintf(log, "CREAT::%s\n", path);
+    get_log(log);
+    close(res);
+
+    return 0;
+}
+
+static int xmp_unlink(const char *path)
+{
+    char fpath[1000];
+
+    if(strcmp(path,"/") == 0){
+        path=dirpath;
+        sprintf(fpath,"%s",path);
+    }
+    else sprintf(fpath, "%s%s",dirpath,path);
+	int res;
+
+	res = unlink(fpath);
+	if (res == -1)
+		return -errno;
+
+    char log[1000];
+    sprintf(log, "UNLINK::%s\n", path);
+    get_log(log);
+	return 0;
+}
+
+static int xmp_utimens(const char *path, const struct timespec ts[2])
+{
+    char fpath[1000];
+
+    if(strcmp(path,"/") == 0){
+        path=dirpath;
+        sprintf(fpath,"%s",path);
+    }
+    else sprintf(fpath, "%s%s",dirpath,path);
+
+	int res;
+	struct timeval tv[2];
+
+	tv[0].tv_sec = ts[0].tv_sec;
+	tv[0].tv_usec = ts[0].tv_nsec / 1000;
+	tv[1].tv_sec = ts[1].tv_sec;
+	tv[1].tv_usec = ts[1].tv_nsec / 1000;
+
+	res = utimes(fpath, tv);
+	if (res == -1)
+		return -errno;
+
+	return 0;
+}
+
 static struct fuse_operations xmp_oper = {
     .getattr = xmp_getattr,
     .readdir = xmp_readdir,
     .read = xmp_read,
+    .mkdir = xmp_mkdir,
+    .rmdir = xmp_rmdir,
+    .rename = xmp_rename,
+    .unlink = xmp_unlink,
+    .utimens = xmp_utimens,
+    .create = xmp_create,
 };  
 
 int main(int  argc, char *argv[]) {
