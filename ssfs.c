@@ -216,7 +216,6 @@ static int xmp_read(const char *path, char *buf, size_t size, off_t offset, stru
     else {
         char s[1000];
         int enable=0;
-        char fpath[1000];
         char befencv[1000] = "", afencv[1000] = "";
 
         char *tok = strtok(path, "/");
