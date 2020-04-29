@@ -53,7 +53,7 @@ void enkrip1(char* res, char* name) {
 Penjelasan:
 - Fungsi menerima pointer string yang akan diencrypt dan pointer untuk mengembalikan hasil encrypt.
 - Terdapat loop di dalam fungsi yang menelusuri string 'name' yang dikirimkan.
-- Masing-masing karakter dicari posisinya di dalam key. Setelah ditemukan, key tersebut ditambah dengan 10 lalu di modulo agar kembali memutar '(key + 10) % 87' untuk diencrypt dan hasilnya dimasukkan ke dalam variable string hasil 'res'
+- Masing-masing karakter dicari posisinya di dalam key. Setelah ditemukan, key tersebut ditambah dengan 10 lalu di modulo agar kembali memutar `(key + 10) % 87` untuk diencrypt dan hasilnya dimasukkan ke dalam variable string hasil 'res'
 - Fungsi selesai ketika seluruh string 'name' telah ditelusuri
 #### fungsi dekrip1
 ~~~
@@ -74,7 +74,7 @@ void dekrip1(char* res, char* name) {
 Penjelasan:
 - Fungsi menerima pointer string yang akan didecrypt dan pointer untuk mengembalikan hasil decrypt.
 - Terdapat loop di dalam fungsi yang menelusuri string 'name' yang dikirimkan.
-- Masing-masing karakter dicari posisinya di dalam key. Setelah ditemukan, key tersebut ditambah 87 dikurang dengan 10 lalu di modulo agar kembali memutar '(key + 87 - 10) % 87' untuk didecrypt dan hasilnya dimasukkan ke dalam variable string hasil 'res'
+- Masing-masing karakter dicari posisinya di dalam key. Setelah ditemukan, key tersebut ditambah 87 dikurang dengan 10 lalu di modulo agar kembali memutar `(key + 87 - 10) % 87` untuk didecrypt dan hasilnya dimasukkan ke dalam variable string hasil 'res'
 - Fungsi selesai ketika seluruh string 'name' telah ditelusuri
 
 Untuk melakukan encrypt pada filesystem buatan, harus diubah fungsi xmp_getattr, xmp_readdir, dan xmp_read
@@ -109,9 +109,9 @@ static int xmp_getattr(const char *path, struct stat *stbuf) {
 }
 ~~~
 Penjelasan :
-- Fungsi tersebut pertama akan memisahkan string yang akan didecrypt dan tidak akan didecrypt menggunakan variabel 'befencv' dan 'afencv'
-- Variable 'afencv' akan diperlakukan fungsi decrypt
-- Hasil string tersebut digabungkan agar menjadi path untuk membaca directory sesungguhnya. 'sprintf(fpath, "%s%s%s", dirpath, befencv, s);'
+- Fungsi tersebut pertama akan memisahkan string yang akan didecrypt dan tidak akan didecrypt menggunakan variabel `befencv` dan `afencv`
+- Variable `afencv` akan diperlakukan fungsi decrypt
+- Hasil string tersebut digabungkan agar menjadi path untuk membaca directory sesungguhnya. `sprintf(fpath, "%s%s%s", dirpath, befencv, s);`
 #### xmp_readdir
 ~~~
 static int xmp_readdir(const char *path, void *buf, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info *fi) {
@@ -138,13 +138,12 @@ static int xmp_readdir(const char *path, void *buf, fuse_fill_dir_t filler, off_
 }
 ~~~
 Penjelasan :
-- Fungsi tersebut pertama akan memisahkan string yang akan didecrypt dan tidak akan didecrypt menggunakan variabel 'befencv' dan 'afencv' (sama seperti xmp_getattr)
-- Variable 'afencv' akan diperlakukan fungsi decrypt
+- Fungsi tersebut pertama akan memisahkan string yang akan didecrypt dan tidak akan didecrypt menggunakan variabel `befencv` dan `afencv`(sama seperti xmp_getattr)
+- Variable `afencv` akan diperlakukan fungsi decrypt
 - Hasil string tersebut digabungkan agar menjadi path untuk membaca directory sesungguhnya. 'sprintf(fpath, "%s%s%s", dirpath, befencv, s);'
-- Apabila directory tersebut merupakan directory yang perlu diencrypt, maka akan dilakukan fungsi encrypt sebelum filler. 'enkrip1(sa, de->d_name); res = (filler(buf, sa, &st, 0));'
+- Apabila directory tersebut merupakan directory yang perlu diencrypt, maka akan dilakukan fungsi encrypt sebelum filler. `enkrip1(sa, de->d_name); res = (filler(buf, sa, &st, 0));`
 #### xmp_readdir
 ~~~
-
 static int xmp_read(const char *path, char *buf, size_t size, off_t offset, struct fuse_file_info *fi) {
     ...
     else {
@@ -175,9 +174,9 @@ static int xmp_read(const char *path, char *buf, size_t size, off_t offset, stru
 }
 ~~~
 Penjelasan :
-- Fungsi tersebut pertama akan memisahkan string yang akan didecrypt dan tidak akan didecrypt menggunakan variabel 'befencv' dan 'afencv' (sama seperti xmp_getattr)
-- Variable 'afencv' akan diperlakukan fungsi decrypt
-- Hasil string tersebut digabungkan agar menjadi path untuk membaca directory sesungguhnya. 'sprintf(fpath, "%s%s%s", dirpath, befencv, s);'
+- Fungsi tersebut pertama akan memisahkan string yang akan didecrypt dan tidak akan didecrypt menggunakan variabel `befencv` dan `afencv` (sama seperti xmp_getattr)
+- Variable `afencv` akan diperlakukan fungsi decrypt
+- Hasil string tersebut digabungkan agar menjadi path untuk membaca directory sesungguhnya. `sprintf(fpath, "%s%s%s", dirpath, befencv, s);`
 
 Untuk membuat log folder baru yang diencrypt, mengubah fungsi xmp_mkdir dan xmp_rename
 #### xmp_readdir
