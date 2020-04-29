@@ -8,7 +8,7 @@
 #include <errno.h>
 #include <sys/time.h>
 
-static const char *dirpath = "/home/tari/Documents";
+static const char *dirpath = "/home/martin/Documents";
 static const char *key = "9(ku@AW1[Lmvgax6q`5Y2Ry?+sF!^HKQiBXCUSe&0M.b%rI'7d)o4~VfZ*{#:}ETt$3J-zpc]lnh8,GwP_ND|jO";
 
 void get_log(char *print){
@@ -19,7 +19,7 @@ void get_log(char *print){
     strftime(waktu, sizeof(waktu), "%y%m%d-%X", &tm);
     
     FILE *log;
-    log = fopen("/home/tari/fs.log", "a");
+    log = fopen("/home/martin/fs.log", "a");
 
     if(strstr(print, "RMDIR") != NULL || strstr(print, "UNLINK") != NULL){
         fprintf(log, "WARNING::%s::%s", waktu, print);
@@ -267,6 +267,19 @@ static int xmp_mkdir(const char *path, mode_t mode)
     char log[1000];
     sprintf(log, "MKDIR::%s\n", path);
     get_log(log);
+
+    char pathcopy[1000];
+    strcpy(pathcopy, path);
+    char *tok = strtok(pathcopy, "/");
+    char log2[1000];
+    while (tok!=NULL) {
+        if (strncmp(tok, "encv1_", 6) == 0) {
+            sprintf(log2, "ENCRYPT::%s\n", path);
+            get_log(log2);
+            break;
+        }
+        tok = strtok(NULL, "/");
+    }
 	return 0;
 }
 
@@ -307,6 +320,19 @@ static int xmp_rename(const char *from, const char *to)
     char log[1000];
     sprintf(log, "RENAME::%s::%s\n", from, to);
     get_log(log);
+
+    char pathcopy[1000];
+    strcpy(pathcopy, to);
+    char *tok = strtok(pathcopy, "/");
+    char log2[1000];
+    while (tok!=NULL) {
+        if (strncmp(tok, "encv1_", 6) == 0) {
+            sprintf(log2, "ENCRYPT::%s\n", to);
+            get_log(log2);
+            break;
+        }
+        tok = strtok(NULL, "/");
+    }
 	return 0;
 }
 
