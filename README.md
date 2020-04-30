@@ -6,7 +6,7 @@ Misal kan ada file bernama “kelincilucu.jpg” dalam directory FOTO_PENTING, d
 “encv1_rahasia/FOTO_PENTING/kelincilucu.jpg” => “encv1_rahasia/ULlL@u]AlZA(/g7D.|_.Da_a.jpg
 Note : Dalam penamaan file ‘/’ diabaikan, dan ekstensi tidak perlu di encrypt. Metode enkripsi pada suatu direktori juga berlaku kedalam direktori lainnya yang ada didalamnya.
 #### fungsi enkrip1
-~~~
+~~~c
 void enkrip1(char* res, char* name) {
     strcpy(res, "");
     int resmod = 87;
@@ -56,7 +56,7 @@ Penjelasan:
 - Masing-masing karakter dicari posisinya di dalam key. Setelah ditemukan, key tersebut ditambah dengan 10 lalu di modulo agar kembali memutar `(key + 10) % 87` untuk diencrypt dan hasilnya dimasukkan ke dalam variable string hasil 'res'
 - Fungsi selesai ketika seluruh string 'name' telah ditelusuri
 #### fungsi dekrip1
-~~~
+~~~c
 void dekrip1(char* res, char* name) {
 ...
             if (dekrip) {
@@ -79,7 +79,7 @@ Penjelasan:
 
 Untuk melakukan encrypt pada filesystem buatan, harus diubah fungsi xmp_getattr, xmp_readdir, dan xmp_read
 #### xmp_getattr
-~~~
+~~~c
 static int xmp_getattr(const char *path, struct stat *stbuf) {
     int res,enable=0;
     char fpath[1000];
@@ -113,7 +113,7 @@ Penjelasan :
 - Variable `afencv` akan diperlakukan fungsi decrypt
 - Hasil string tersebut digabungkan agar menjadi path untuk membaca directory sesungguhnya. `sprintf(fpath, "%s%s%s", dirpath, befencv, s);`
 #### xmp_readdir
-~~~
+~~~c
 static int xmp_readdir(const char *path, void *buf, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info *fi) {
     ...
     while ((de = readdir(dp)) != NULL) {
@@ -143,7 +143,7 @@ Penjelasan :
 - Hasil string tersebut digabungkan agar menjadi path untuk membaca directory sesungguhnya. 'sprintf(fpath, "%s%s%s", dirpath, befencv, s);'
 - Apabila directory tersebut merupakan directory yang perlu diencrypt, maka akan dilakukan fungsi encrypt sebelum filler. `enkrip1(sa, de->d_name); res = (filler(buf, sa, &st, 0));`
 #### xmp_readdir
-~~~
+~~~c
 static int xmp_read(const char *path, char *buf, size_t size, off_t offset, struct fuse_file_info *fi) {
     ...
     else {
@@ -180,7 +180,7 @@ Penjelasan :
 
 Untuk membuat log folder baru yang diencrypt, mengubah fungsi xmp_mkdir dan xmp_rename
 #### xmp_readdir
-~~~
+~~~c
 static int xmp_mkdir(const char *path, mode_t mode)
 {
     ...
@@ -203,7 +203,7 @@ Penjelasan :
 - Nama directory yang baru dibuat akan dicek terlebih dahulu apakah berawalan string encv1_
 - Akan menulis log encrypt suatu folder apabila folder tersebut berawalan encv1
 #### xmp_rename
-~~~
+~~~c
 static int xmp_rename(const char *from, const char *to)
 {
     ...
@@ -225,3 +225,39 @@ static int xmp_rename(const char *from, const char *to)
 Penjelasan : 
 - Nama directory yang baru dibuat akan dicek terlebih dahulu apakah berawalan string encv1_
 - Akan menulis log encrypt suatu folder apabila folder tersebut berawalan encv1
+
+## Soal 4
+Dalam soal 4, kami diminta untuk membuat file log yang berisi record command yang telah dijalankan. Format log adalah sebagai berikut: [MODE]::[YYMMDD-H:M:S]::[COMMAND]::[KETERANGAN]. Terdapat dua mode yaitu INFO dan WARNING; WARNING digunakan untuk command unlink dan rmdir, sedangkan INFO digunakan untuk command yang lain. Keterangan berisi path file yang bersangkutan.
+
+### Fungsi Log
+~~~c
+void get_log(char *print){
+    time_t t = time(NULL);
+    struct tm tm = *localtime(&t);
+    char waktu[200];
+
+    strftime(waktu, sizeof(waktu), "%y%m%d-%X", &tm);
+    
+    FILE *log;
+    log = fopen("/home/martin/fs.log", "a");
+
+    if(strstr(print, "RMDIR") != NULL || strstr(print, "UNLINK") != NULL){
+        fprintf(log, "WARNING::%s::%s", waktu, print);
+    }
+    else{
+        fprintf(log, "INFO::%s::%s", waktu, print);
+    }
+    fclose(log);
+}
+~~~
+Penjelasan:
+- Fungsi get_log menerima passing berupa string.
+- String waktu berisi waktu yang didapatkan dengan format yang telah ditentukan.
+- File log dibuat menggunakan fopen, dengan mode "a" yang berarti append karena setiap file dibuka, akan ditambahkan text baru.
+- Untuk membedakan penulisan mode log (warning dan info), terdapat pengecekan kondisi apabila ditemukan substring "RMDIR" atau "UNLINK" pada print (string yang dipassingkan) maka modenya adalah warning. Apabila tidak ditemukan, maka modenya adalah info.
+
+Pemanggilan fungsi get_log dilakukan sebagai berikut.
+~~~c
+get_log(log);
+~~~
+dengan log merupakan string yang berisi "[COMMAND]::[PATH FILE]". Fungsi get_log dipanggil di masing-masing fungsi operasi fuse yang dibutuhkan (mkdir, rmdir, rename, create, unlink).
